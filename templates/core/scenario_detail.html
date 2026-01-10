@@ -1,0 +1,238 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ scenario.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'scenario_list' %}">Сценарии</a></li>
+            <li class="breadcrumb-item active">{{ scenario.title|truncatechars:30 }}</li>
+        </ol>
+    </nav>
+
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">{{ scenario.title }}</h4>
+                {% if can_edit %}
+                <div class="btn-group">
+
+                    {% if user == scenario.author or user.is_staff %}
+                    <div class="btn-group mt-3" role="group">
+                        <a href="{% url 'scenario_edit' scenario.id %}"
+                           class="btn btn-outline-primary">
+                            <i class="fas fa-edit"></i> Редактировать
+                        </a>
+                        <a href="{% url 'scenario_delete' scenario.id %}"
+                           class="btn btn-outline-danger"
+                           onclick="return confirm('Вы действительно хотите удалить этот сценарий?')">
+                            <i class="fas fa-trash"></i> Удалить
+                        </a>
+                    </div>
+                    {% endif %}
+                    {% if scenario.status == 'draft' %}
+                    <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#publishModal">
+                        Опубликовать
+                    </button>
+                    {% else %}
+                    <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#unpublishModal">
+                        В черновики
+                    </button>
+                    {% endif %}
+
+                    <a href="{% url 'scenario_analyze' scenario.pk %}" class="btn btn-sm btn-outline-info">Анализ</a>
+
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <h6>Описание</h6>
+                    <p>{{ scenario.description|default:"Без описания" }}</p>
+
+                    <h6>Текст сценария</h6>
+                    <div class="bg-light p-3 rounded pre-scrollable" style="max-height: 400px;">
+                        <pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">{{ scenario.content }}</pre>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">Информация</div>
+                        <div class="card-body">
+                            <table class="table table-sm">
+                                <tr>
+                                    <th>Автор:</th>
+                                    <td>{{ scenario.author.username }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Система:</th>
+                                    <td>{{ scenario.game_system.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Сложность:</th>
+                                    <td>{{ scenario.get_difficulty_display }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Игроков:</th>
+                                    <td>{{ scenario.recommended_players }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Уровень:</th>
+                                    <td>{{ scenario.recommended_level }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Время игры:</th>
+                                    <td>{{ scenario.estimated_play_time }} часов</td>
+                                </tr>
+                                <tr>
+                                    <th>Статус:</th>
+                                    <td>
+                                        {% if scenario.status == 'draft' %}
+                                        <span class="badge bg-warning">Черновик</span>
+                                        {% elif scenario.status == 'published' %}
+                                        <span class="badge bg-success">Опубликован</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ scenario.get_status_display }}</span>
+                                        {% endif %}
+
+                                        {% if scenario.is_public %}
+                                        <span class="badge bg-success">Публичный</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Приватный</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Создан:</th>
+                                    <td>{{ scenario.created_at|date:"d.m.Y H:i" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Просмотры:</th>
+                                    <td>{{ scenario.views }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if elements %}
+            <div class="mt-4">
+                <h5>Элементы сценария</h5>
+                <div class="row">
+                    {% for element in elements %}
+                    <div class="col-md-3 mb-2">
+                        <div class="card">
+                            <div class="card-body p-2">
+                                <small class="text-muted">{{ element.get_element_type_display }}</small>
+                                <p class="mb-0"><strong>{{ element.name }}</strong></p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if analyses %}
+            <div class="mt-4">
+                <h5>Результаты анализа</h5>
+                {% for analysis in analyses %}
+                <div class="card mb-2">
+                    <div class="card-header">
+                        {{ analysis.get_analysis_type_display }}
+                        <small class="text-muted">{{ analysis.created_at|date:"d.m.Y H:i" }}</small>
+                    </div>
+                    <div class="card-body">
+                        <p>Уверенность анализа: {{ analysis.confidence_score|floatformat:2 }}</p>
+                        {% if analysis.recommendations %}
+                        <h6>Рекомендации:</h6>
+                        <ul>
+                            {% for rec in analysis.recommendations %}
+                            <li>{{ rec }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно публикации -->
+<div class="modal fade" id="publishModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Опубликовать сценарий</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите опубликовать сценарий <strong>"{{ scenario.title }}"</strong>?</p>
+                <p>После публикации другие пользователи смогут его видеть (если стоит галочка "Публичный").</p>
+                <form method="post" action="{% url 'scenario_publish' scenario.pk %}">
+                    {% csrf_token %}
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="is_public" id="id_is_public" checked>
+                        <label class="form-check-label" for="id_is_public">
+                            Сделать публичным (виден всем)
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-success">Опубликовать</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно отмены публикации -->
+<div class="modal fade" id="unpublishModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Вернуть в черновики</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите вернуть сценарий <strong>"{{ scenario.title }}"</strong> в черновики?</p>
+                <p>После этого другие пользователи не смогут его видеть.</p>
+                <form method="post" action="{% url 'scenario_unpublish' scenario.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning">В черновики</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .pre-scrollable {
+        max-height: 400px;
+        overflow-y: scroll;
+    }
+    .badge {
+        margin-right: 5px;
+    }
+</style>
+{% endblock %}
