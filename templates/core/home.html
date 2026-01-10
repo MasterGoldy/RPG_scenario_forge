@@ -1,0 +1,87 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Главная - RPG Scenario Forge{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <h1 class="display-4">Добро пожаловать!</h1>
+    <p class="lead">Платформа для создания и анализа сценариев НРИ</p>
+
+    <!-- Кнопки авторизации (только для неавторизованных) -->
+    {% if not user.is_authenticated %}
+    <div class="mt-4 mb-5">
+        <a href="{% url 'register' %}" class="btn btn-success btn-lg me-2">
+            <i class="fas fa-user-plus"></i> Зарегистрироваться
+        </a>
+        <a href="{% url 'login' %}" class="btn btn-outline-success btn-lg">
+            <i class="fas fa-sign-in-alt"></i> Войти
+        </a>
+    </div>
+    {% endif %}
+
+    <div class="row mt-5">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">📝 Создавайте</h5>
+                    <p class="card-text">Создавайте сценарии для D&D, Pathfinder и других систем</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">🔍 Анализируйте</h5>
+                    <p class="card-text">Автоматический анализ баланса и сложности</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">🤝 Делитесь</h5>
+                    <p class="card-text">Публикуйте сценарии и находите идеи</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-5">
+        <a href="{% url 'scenario_create' %}" class="btn btn-primary btn-lg me-3">Создать сценарий</a>
+        <a href="{% url 'scenario_list' %}" class="btn btn-outline-primary btn-lg">Посмотреть все</a>
+    </div>
+
+    <!-- Если пользователь авторизован, показываем приветствие -->
+    {% if user.is_authenticated %}
+    <div class="mt-5 alert alert-info" style="max-width: 600px; margin: 0 auto;">
+        <h5><i class="fas fa-user-circle"></i> Привет, {{ user.username }}!</h5>
+        <p class="mb-0">У вас есть доступ ко всем функциям платформы.</p>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .card {
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        transition: transform 0.3s;
+        height: 100%;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .btn-lg {
+        padding: 12px 30px;
+        font-size: 1.1rem;
+        border-radius: 10px;
+    }
+
+    .alert {
+        border-radius: 10px;
+        border: 1px solid #b6d4fe;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,48 @@
+/* Основные стили */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+.card {
+    box-shadow: 0 2px 4px rgba(0,0,0,.05);
+    border: 1px solid rgba(0,0,0,.125);
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.btn {
+    border-radius: 4px;
+}
+
+.form-control, .form-select {
+    border-radius: 4px;
+}
+
+/* Стили для текста сценария */
+pre {
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    .card {
+        margin-bottom: 15px;
+    }
+}
