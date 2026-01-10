@@ -1,0 +1,559 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Советы по балансу - {{ scenario.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Хлебные крошки -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'scenario_list' %}">Сценарии</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'scenario_detail' scenario.pk %}">{{ scenario.title|truncatechars:30 }}</a></li>
+            <li class="breadcrumb-item active">Советы</li>
+        </ol>
+    </nav>
+
+    <!-- Заголовок и параметры -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2 class="mb-3">
+                <i class="fas fa-lightbulb text-warning"></i>
+                Готовые советы по балансу
+            </h2>
+            <h4 class="text-muted">{{ scenario.title }}</h4>
+
+            <!-- Параметры сценария -->
+            <div class="card mt-3">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-cog"></i>
+                        Параметры сценария
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 col-6">
+                            <div class="mb-3">
+                                <small class="text-muted d-block">Сложность</small>
+                                <div class="h5">
+                                    <span class="badge bg-{% if scenario.difficulty == 'beginner' %}success{% elif scenario.difficulty == 'intermediate' %}info{% elif scenario.difficulty == 'advanced' %}warning{% else %}danger{% endif %}">
+                                        {{ scenario.get_difficulty_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="mb-3">
+                                <small class="text-muted d-block">Игроков</small>
+                                <div class="h5">{{ scenario.recommended_players|default:"?" }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="mb-3">
+                                <small class="text-muted d-block">Уровень</small>
+                                <div class="h5">{{ scenario.recommended_level|default:"?" }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="mb-3">
+                                <small class="text-muted d-block">Время</small>
+                                <div class="h5">{{ scenario.estimated_play_time|default:"?" }}ч</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted d-block">Система</small>
+                            <div class="h6">{{ scenario.game_system.name }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted d-block">Статус</small>
+                            <div class="h6">
+                                {% if scenario.status == 'draft' %}
+                                    <span class="badge bg-warning">Черновик</span>
+                                {% elif scenario.status == 'published' %}
+                                    <span class="badge bg-success">Опубликован</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ scenario.get_status_display }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Кнопки советов -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-magic"></i>
+                Выберите тип советов
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-2" id="adviceButtons">
+                <div class="col-md-2 col-6">
+                    <button type="button" class="btn btn-outline-primary w-100 h-100 py-3 advice-btn active"
+                            data-target="generalAdvice">
+                        <i class="fas fa-star fa-2x mb-2"></i><br>
+                        <span>Общие</span>
+                    </button>
+                </div>
+                <div class="col-md-2 col-6">
+                    <button type="button" class="btn btn-outline-danger w-100 h-100 py-3 advice-btn"
+                            data-target="balanceAdvice">
+                        <i class="fas fa-fist-raised fa-2x mb-2"></i><br>
+                        <span>Баланс</span>
+                    </button>
+                </div>
+                <div class="col-md-2 col-6">
+                    <button type="button" class="btn btn-outline-warning w-100 h-100 py-3 advice-btn"
+                            data-target="difficultyAdvice">
+                        <i class="fas fa-signal fa-2x mb-2"></i><br>
+                        <span>Сложность</span>
+                    </button>
+                </div>
+                <div class="col-md-2 col-6">
+                    <button type="button" class="btn btn-outline-success w-100 h-100 py-3 advice-btn"
+                            data-target="narrativeAdvice">
+                        <i class="fas fa-book fa-2x mb-2"></i><br>
+                        <span>Сюжет</span>
+                    </button>
+                </div>
+                <div class="col-md-2 col-6">
+                    <button type="button" class="btn btn-outline-info w-100 h-100 py-3 advice-btn"
+                            data-target="elementsAdvice">
+                        <i class="fas fa-cube fa-2x mb-2"></i><br>
+                        <span>Элементы</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="alert alert-light mt-3">
+                <small>
+                    <i class="fas fa-info-circle"></i>
+                    Нажмите на кнопку для показа соответствующих советов
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Блоки с советами (все сразу, но скрыты) -->
+    <div id="adviceContainer" class="mb-4">
+
+        <!-- Общие советы -->
+        <div id="generalAdvice" class="advice-block">
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-star"></i>
+                        Общие принципы создания сценариев
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="advice-content">
+                        <div class="mb-2"><strong>🎯 ОБЩИЕ ПРИНЦИПЫ ХОРОШЕГО СЦЕНАРИЯ</strong></div>
+                        <div class="mb-2"></div>
+                        <div class="mb-2"><strong>1. ЯСНЫЕ ЦЕЛИ</strong></div>
+                        <div class="mb-2">• <strong>Главная цель</strong>: Понятна с первых 15 минут</div>
+                        <div class="mb-2">• <strong>Промежуточные цели</strong>: 2-3 этапа к основной цели</div>
+                        <div class="mb-2">• <strong>Срочность</strong>: Зачем действовать сейчас?</div>
+                        <div class="mb-2"></div>
+                        <div class="mb-2"><strong>2. СБАЛАНСИРОВАННЫЕ ИСПЫТАНИЯ</strong></div>
+                        <div class="mb-2">• <strong>Бои</strong>: Разная сложность и типы врагов</div>
+                        <div class="mb-2">• <strong>Загадки</strong>: Не блокируют прогресс при неудаче</div>
+                        <div class="mb-2">• <strong>Ролеплей</strong>: Диалоги с вариантами выбора</div>
+                        <div class="mb-2"></div>
+                        <div class="mb-2"><strong>3. ЗАПОМИНАЮЩИЕСЯ ПЕРСОНАЖИ</strong></div>
+                        <div class="mb-2">• <strong>Внешность</strong>: 1-2 яркие детали</div>
+                        <div class="mb-2">• <strong>Мотивация</strong>: Чего хочет персонаж?</div>
+                        <div class="mb-2">• <strong>Конфликт</strong>: Внутренний или внешний</div>
+                        <div class="mb-2"></div>
+                        <div class="mb-2"><strong>4. ПЛАВНАЯ СЛОЖНОСТЬ</strong></div>
+                        <div class="mb-2">• <strong>Начало</strong>: Легкие испытания</div>
+                        <div class="mb-2">• <strong>Середина</strong>: Средняя сложность</div>
+                        <div class="mb-2">• <strong>Кульминация</strong>: Самые сложные вызовы</div>
+                        <div class="mb-2">• <strong>Финал</strong>: Удовлетворение от победы</div>
+                    </div>
+                </div>
+                <div class="card-footer text-muted small">
+                    <i class="far fa-clock"></i> Готовые советы
+                    <span class="float-end">
+                        <i class="fas fa-bullseye"></i> Уверенность: 0.9
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Советы по балансу -->
+        <div id="balanceAdvice" class="advice-block" style="display: none;">
+            <div class="card mb-3">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-fist-raised"></i>
+                        Советы по балансу для {{ scenario.get_difficulty_display }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="advice-content">
+                        {% if scenario.difficulty == 'beginner' %}
+                        <div class="mb-2"><strong>👶 Для новичков (1-3 уровень)</strong></div>
+                        <div class="mb-2"><strong>Уровень персонажей</strong>: {{ scenario.recommended_level|default:"1-3" }}</div>
+                        <div class="mb-2"><strong>Количество игроков</strong>: {{ scenario.recommended_players|default:4 }}</div>
+                        <div class="mb-2"></div>
+                        <div class="mb-2">🎯 <strong>Количество врагов</strong>: 2-3 на игрока за бой</div>
+                        <div class="mb-2">❤️ <strong>ХП врагов</strong>: 15-30 очков здоровья</div>
+                        <div class="mb-2">💥 <strong>Урон за раунд</strong>: 5-10 единиц урона</div>
+                        <div class="mb-2">⭐ <strong>Опыт за бой</strong>: 50-100 XP на игрока</div>
+                        <div class="mb-2">👹 <strong>Типы врагов</strong>: гоблины, волки, простые бандиты</div>
+                        <div class="mb-2">👑 <strong>Босс</strong>: 40-60 HP, 1-2 особые способности</div>
+                        <div class="mb-2">📊 <strong>Всего врагов за сессию</strong>: ({{ scenario.recommended_players|default:4 }} × 3) × 2-3 боя</div>
+                        <div class="mb-2">🔄 <strong>Распределение</strong>: 70% слабых, 25% средних, 5% сильных</div>
+
+                        {% elif scenario.difficulty == 'intermediate' %}
+                        <div class="mb-2"><strong>🎓 Для опытных (4-10 уровень)</strong></div>
+                        <div class="mb-2"><strong>Уровень персонажей</strong>: {{ scenario.recommended_level|default:"4-10" }}</div>
+                        <div class="mb-2"><strong>Количество игроков</strong>: {{ scenario.recommended_players|default:4 }}</div>
+                        <div class="mb-2"></div>
+                        <div class="mb-2">🎯 <strong>Количество врагов</strong>: 3-4 на игрока за бой</div>
+                        <div class="mb-2">❤️ <strong>ХП врагов</strong>: 30-60 очков здоровья</div>
+                        <div class="mb-2">💥 <strong>Урон за раунд</strong>: 10-20 единиц урона</div>
+                        <div class="mb-2">⭐ <strong>Опыт за бой</strong>: 100-300 XP на игрока</div>
+                        <div class="mb-2">👹 <strong>Типы врагов</strong>: огры, тролли, гиены, наемники</div>
+                        <div class="mb-2">👑 <strong>Босс</strong>: 80-120 HP, 2-3 особые способности</div>
+                        <div class="mb-2">📊 <strong>Всего врагов за сессию</strong>: ({{ scenario.recommended_players|default:4 }} × 4) × 3-4 боя</div>
+                        <div class="mb-2">🔄 <strong>Распределение</strong>: 60% слабых, 30% средних, 10% сильных</div>
+
+                        {% elif scenario.difficulty == 'advanced' %}
+                        <div class="mb-2"><strong>⚔️ Для ветеранов (11-16 уровень)</strong></div>
+                        <div class="mb-2"><strong>Уровень персонажей</strong>: {{ scenario.recommended_level|default:"11-16" }}</div>
+                        <div class="mb-2"><strong>Количество игроков</strong>: {{ scenario.recommended_players|default:4 }}</div>
+                        <div class="mb-2"></div>
+                        <div class="mb-2">🎯 <strong>Количество врагов</strong>: 4-5 на игрока за бой</div>
+                        <div class="mb-2">❤️ <strong>ХП врагов</strong>: 60-100 очков здоровья</div>
+                        <div class="mb-2">💥 <strong>Урон за раунд</strong>: 20-35 единиц урона</div>
+                        <div class="mb-2">⭐ <strong>Опыт за бой</strong>: 300-800 XP на игрока</div>
+                        <div class="mb-2">👹 <strong>Типы врагов</strong>: элементали, вампиры, дракониды, маги</div>
+                        <div class="mb-2">👑 <strong>Босс</strong>: 150-250 HP, 3-4 особые способности</div>
+                        <div class="mb-2">📊 <strong>Всего врагов за сессию</strong>: ({{ scenario.recommended_players|default:4 }} × 5) × 3-4 боя</div>
+                        <div class="mb-2">🔄 <strong>Распределение</strong>: 50% средних, 40% сильных, 10% элитных</div>
+
+                        {% else %}
+                        <div class="mb-2"><strong>👑 Для мастеров (17-20 уровень)</strong></div>
+                        <div class="mb-2"><strong>Уровень персонажей</strong>: {{ scenario.recommended_level|default:"17-20" }}</div>
+                        <div class="mb-2"><strong>Количество игроков</strong>: {{ scenario.recommended_players|default:4 }}</div>
+                        <div class="mb-2"></div>
+                        <div class="mb-2">🎯 <strong>Количество врагов</strong>: 5-6 на игрока за бой</div>
+                        <div class="mb-2">❤️ <strong>ХП врагов</strong>: 100-200+ очков здоровья</div>
+                        <div class="mb-2">💥 <strong>Урон за раунд</strong>: 35-60+ единиц урона</div>
+                        <div class="mb-2">⭐ <strong>Опыт за бой</strong>: 800-2000+ XP на игрока</div>
+                        <div class="mb-2">👹 <strong>Типы врагов</strong>: драконы, демоны, личи, божественные существа</div>
+                        <div class="mb-2">👑 <strong>Босс</strong>: 300-500+ HP, 4-5 легендарных действий</div>
+                        <div class="mb-2">📊 <strong>Всего врагов за сессию</strong>: ({{ scenario.recommended_players|default:4 }} × 6) × 2-3 эпичных боя</div>
+                        <div class="mb-2">🔄 <strong>Распределение</strong>: 40% сильных, 50% элитных, 10% легендарных</div>
+                        {% endif %}
+
+                        <div class="mb-2"></div>
+                        <div class="mb-2"><strong>📈 Пример расчета для вашей группы:</strong></div>
+                        <div class="mb-2">👥 <strong>Игроков</strong>: {{ scenario.recommended_players|default:4 }}</div>
+                        <div class="mb-2">⚔️ <strong>Врагов в среднем бою</strong>: ~{{ scenario.recommended_players|default:4 }} + 3</div>
+                        <div class="mb-2">⏱️ <strong>Длительность боя</strong>: 3-5 раундов</div>
+                    </div>
+
+                    <div class="alert alert-warning mt-3">
+                        <h6><i class="fas fa-exclamation-triangle"></i> Примечания:</h6>
+                        <ul class="mb-0">
+                            <li>Это общие рекомендации. Настройте под свою группу.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-footer text-muted small">
+                    <i class="far fa-clock"></i> Готовые советы
+                    <span class="float-end">
+                        <i class="fas fa-bullseye"></i> Уверенность: 0.9
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Советы по сложности -->
+        <div id="difficultyAdvice" class="advice-block" style="display: none;">
+            <div class="card mb-3">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-signal"></i>
+                        Рекомендации по сложности: {{ scenario.get_difficulty_display }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="advice-content">
+                        {% if scenario.difficulty == 'beginner' %}
+                        <div class="mb-2"><strong>👶 Уровень: НОВИЧОК (1-3)</strong></div>
+                        <div class="mb-2"></div>
+                        <div class="mb-2">🎯 <strong>Цель</strong>: Обучение основам игры</div>
+                        <div class="mb-2">👹 <strong>Враги</strong>: Простые, предсказуемые</div>
+                        <div class="mb-2">💬 <strong>Ролеплей</strong>: Прямые диалоги, ясные цели</div>
+                        <div class="mb-2">🧩 <strong>Загадки</strong>: Очевидные решения</div>
+                        <div class="mb-2">🎁 <strong>Награды</strong>: Щедрые, мотивирующие</div>
+
+                        {% elif scenario.difficulty == 'intermediate' %}
+                        <div class="mb-2"><strong>🎓 Уровень: ОПЫТНЫЙ (4-10)</strong></div>
+                        <div class="mb-2"></div>
+                        <div class="mb-2">🎯 <strong>Цель</strong>: Тактика и развитие персонажей</div>
+                        <div class="mb-2">👹 <strong>Враги</strong>: Со способностями, синергией</div>
+                        <div class="mb-2">💬 <strong>Ролеплей</strong>: Диалоги с выбором, скрытые мотивы</div>
+                        <div class="mb-2">🧩 <strong>Загадки</strong>: Требуют комбинации навыков</div>
+                        <div class="mb-2">🎁 <strong>Награды</strong>: Соответствующие усилиям</div>
+
+                        {% elif scenario.difficulty == 'advanced' %}
+                        <div class="mb-2"><strong>⚔️ Уровень: ВЕТЕРАН (11-16)</strong></div>
+                        <div class="mb-2"></div>
+                        <div class="mb-2">🎯 <strong>Цель</strong>: Стратегия и эпичные сражения</div>
+                        <div class="mb-2">👹 <strong>Враги</strong>: Легендарные действия, фазы боя</div>
+                        <div class="mb-2">💬 <strong>Ролеплей</strong>: Политические интриги, моральные дилеммы</div>
+                        <div class="mb-2">🧩 <strong>Загадки</strong>: Многоэтапные, изменяющие мир</div>
+                        <div class="mb-2">🎁 <strong>Награды</strong>: Легендарные артефакты</div>
+
+                        {% else %}
+                        <div class="mb-2"><strong>👑 Уровень: МАСТЕР (17-20)</strong></div>
+                        <div class="mb-2"></div>
+                        <div class="mb-2">🎯 <strong>Цель</strong>: Изменение реальности, финал кампании</div>
+                        <div class="mb-2">👹 <strong>Враги</strong>: Божественные силы, изменение правил</div>
+                        <div class="mb-2">💬 <strong>Ролеплей</strong>: Переговоры с богами, создание законов</div>
+                        <div class="mb-2">🧩 <strong>Загадки</strong>: Космического масштаба</div>
+                        <div class="mb-2">🎁 <strong>Награды</strong>: Божественные ранги, создание миров</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer text-muted small">
+                    <i class="far fa-clock"></i> Готовые советы
+                    <span class="float-end">
+                        <i class="fas fa-bullseye"></i> Уверенность: 0.9
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Советы по сюжету -->
+        <div id="narrativeAdvice" class="advice-block" style="display: none;">
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-book"></i>
+                        Структура и нарратив сценария
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="advice-content">
+                        <div class="mb-2"><strong>📖 СТРУКТУРА СЦЕНАРИЯ</strong></div>
+                        <div class="mb-2"></div>
+                        <div class="mb-2"><strong>🎬 АКТ 1: Введение (20-30% времени)</strong></div>
+                        <div class="mb-2">• <strong>Зацепка</strong>: Почему игроки здесь?</div>
+                        <div class="mb-2">• <strong>Знакомство</strong>: С NPC и локацией</div>
+                        <div class="mb-2">• <strong>Цель</strong>: Четкая задача</div>
+                        <div class="mb-2"></div>
+                        <div class="mb-2"><strong>📈 АКТ 2: Развитие (50-60% времени)</strong></div>
+                        <div class="mb-2">• <strong>Исследование</strong>: 2-3 ключевые локации</div>
+                        <div class="mb-2">• <strong>Встречи</strong>: 3-4 значимых взаимодействия</div>
+                        <div class="mb-2">• <strong>Испытания</strong>: Бои средней сложности, загадки</div>
+                        <div class="mb-2"></div>
+                        <div class="mb-2"><strong>⚡ АКТ 3: Кульминация (15-20% времени)</strong></div>
+                        <div class="mb-2">• <strong>Подготовка</strong>: Сбор ресурсов, планирование</div>
+                        <div class="mb-2">• <strong>Главный бой/испытание</strong>: Самый сложный вызов</div>
+                        <div class="mb-2">• <strong>Развязка</strong>: Решение основной проблемы</div>
+                        <div class="mb-2"></div>
+                        <div class="mb-2"><strong>🎁 АКТ 4: Завершение (5-10% времени)</strong></div>
+                        <div class="mb-2">• <strong>Награды</strong>: Опыт, сокровища, сюжетные бонусы</div>
+                        <div class="mb-2">• <strong>Последствия</strong>: Как изменился мир?</div>
+                        <div class="mb-2">• <strong>Крючок</strong>: Что дальше?</div>
+                    </div>
+                </div>
+                <div class="card-footer text-muted small">
+                    <i class="far fa-clock"></i> Готовые советы
+                    <span class="float-end">
+                        <i class="fas fa-bullseye"></i> Уверенность: 0.9
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Советы по элементам -->
+        <div id="elementsAdvice" class="advice-block" style="display: none;">
+            <div class="card mb-3">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cube"></i>
+                        Количество и типы элементов
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="advice-content">
+                        <div class="mb-2"><strong>🏗️ РЕКОМЕНДУЕМОЕ КОЛИЧЕСТВО ЭЛЕМЕНТОВ</strong></div>
+                        <div class="mb-2"></div>
+                        <div class="mb-2"><strong>👥 NPC (Персонажи):</strong></div>
+                        <div class="mb-2">• <strong>Минимум</strong>: 3 ключевых NPC</div>
+                        <div class="mb-2">• <strong>Идеально</strong>: {{ scenario.recommended_players|default:4|add:"2" }} персонажей</div>
+                        <div class="mb-2">• <strong>Типы</strong>: Антагонист, союзник, нейтралы</div>
+                        <div class="mb-2"></div>
+                        <div class="mb-2"><strong>👹 ВРАГИ (Боевые встречи):</strong></div>
+                        <div class="mb-2">• <strong>Всего врагов</strong>: {{ scenario.recommended_players|default:4 }} * 3 за сессию</div>
+                        <div class="mb-2">• <strong>Распределение</strong>:</div>
+                        <div class="mb-2">  - 60% слабых (мобы)</div>
+                        <div class="mb-2">  - 30% средних (элитные)</div>
+                        <div class="mb-2">  - 10% сильных (босс)</div>
+                        <div class="mb-2">• <strong>Количество боев</strong>: {{ scenario.estimated_play_time|default:4 }} основных сражений</div>
+                        <div class="mb-2"></div>
+                        <div class="mb-2"><strong>🗺️ ЛОКАЦИИ:</strong></div>
+                        <div class="mb-2">• <strong>Минимум</strong>: 3 ключевые локации</div>
+                        <div class="mb-2">• <strong>Идеально</strong>: {{ scenario.estimated_play_time|default:4|add:"2" }} разных мест</div>
+                        <div class="mb-2">• <strong>Типы</strong>: Город, подземелье, лес, храм</div>
+                    </div>
+
+                    <div class="alert alert-warning mt-3">
+                        <h6><i class="fas fa-exclamation-triangle"></i> Примечания:</h6>
+                        <ul class="mb-0">
+                            <li>Это рекомендации. Адаптируйте под стиль своей группы.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-footer text-muted small">
+                    <i class="far fa-clock"></i> Готовые советы
+                    <span class="float-end">
+                        <i class="fas fa-bullseye"></i> Уверенность: 0.9
+                    </span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Кнопки действий -->
+    <div class="d-flex justify-content-between mt-4">
+        <a href="{% url 'scenario_detail' scenario.pk %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Назад к сценарию
+        </a>
+
+        {% if can_edit %}
+        <a href="{% url 'scenario_edit' scenario.pk %}" class="btn btn-outline-primary">
+            <i class="fas fa-edit"></i> Редактировать
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .advice-btn {
+        transition: all 0.3s;
+        border-width: 2px;
+        height: 100px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        opacity: 0.6;
+    }
+
+    .advice-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        opacity: 0.8;
+    }
+
+    .advice-btn.active {
+        opacity: 1;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    .advice-block {
+        transition: opacity 0.3s ease;
+    }
+
+    .advice-content {
+        line-height: 1.6;
+    }
+
+    .badge {
+        font-size: 0.9em;
+        padding: 0.5em 0.8em;
+    }
+
+    .card {
+        border: 1px solid rgba(0,0,0,.125);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    #adviceContainer {
+        min-height: 300px;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const adviceButtons = document.querySelectorAll('.advice-btn');
+    const adviceBlocks = document.querySelectorAll('.advice-block');
+
+    // Функция для показа нужного блока
+    function showAdviceBlock(targetId) {
+        // Скрываем все блоки
+        adviceBlocks.forEach(block => {
+            block.style.display = 'none';
+        });
+
+        // Показываем нужный блок
+        const targetBlock = document.getElementById(targetId);
+        if (targetBlock) {
+            targetBlock.style.display = 'block';
+
+            // Плавно скроллим к блоку
+            setTimeout(() => {
+                targetBlock.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }, 100);
+        }
+    }
+
+    // Обработка кликов по кнопкам
+    adviceButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const targetId = this.dataset.target;
+
+            // Убираем активный класс у всех кнопок
+            adviceButtons.forEach(btn => btn.classList.remove('active'));
+
+            // Добавляем активный класс нажатой кнопке
+            this.classList.add('active');
+
+            // Показываем соответствующий блок
+            showAdviceBlock(targetId);
+        });
+    });
+
+    // Показываем первый блок по умолчанию
+    const firstButton = document.querySelector('.advice-btn.active');
+    if (firstButton) {
+        const firstTarget = firstButton.dataset.target;
+        showAdviceBlock(firstTarget);
+    }
+});
+</script>
+
+
+<script>
+// Если нет кастомных фильтров, добавляем простые функции
+if (typeof window.multiply === 'undefined') {
+    window.multiply = function(a, b) {
+        return a * b;
+    };
+}
+if (typeof window.divide === 'undefined') {
+    window.divide = function(a, b) {
+        return Math.floor(a / b);
+    };
+}
+</script>
+{% endblock %}
