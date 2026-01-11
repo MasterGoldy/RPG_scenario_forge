@@ -27,15 +27,11 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 # Разрешенные хосты
 ALLOWED_HOSTS = [
-    'MasterGoldy.pythonanywhere.com',
-    'www.MasterGoldy.pythonanywhere.com',
-    'www.mastergoldy.pythonanywhere.com',
-    'mastergoldy.pythonanywhere.com',
+    '.pythonanywhere.com',  # все поддомены pythonanywhere
     '127.0.0.1',
     'localhost',
-    '.pythonanywhere.com',
+    '0.0.0.0'
 ]
-
 
 # ==============================
 # НАСТРОЙКИ БЕЗОПАСНОСТИ ДЛЯ ПРОДАКШЕНА
