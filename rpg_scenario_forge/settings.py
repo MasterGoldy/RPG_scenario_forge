@@ -88,9 +88,7 @@ INSTALLED_APPS = [
     'core.apps.CoreConfig'
 ]
 
-# Добавляем Debug Toolbar только в режиме разработки
-if not PRODUCTION:
-    INSTALLED_APPS.append('debug_toolbar')
+ROOT_URLCONF = 'rpg_scenario_forge.urls'
 
 # ==============================
 # MIDDLEWARE
@@ -106,10 +104,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
-# Добавляем Debug Toolbar только в режиме разработки
-if not PRODUCTION:
-    MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
 
 # ==============================
 # ШАБЛОНЫ
