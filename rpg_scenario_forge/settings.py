@@ -32,7 +32,8 @@ ALLOWED_HOSTS = [
     'www.mastergoldy.pythonanywhere.com',
     'mastergoldy.pythonanywhere.com',
     '127.0.0.1',
-    'localhost'
+    'localhost',
+    '.pythonanywhere.com',
 ]
 
 
