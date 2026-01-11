@@ -26,16 +26,15 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'oz09hk30@al37^(8w257@la54@a%b^!525n20ifk)a
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 # Разрешенные хосты
-if PRODUCTION:
-    ALLOWED_HOSTS = [
-        'MasterGoldy.pythonanywhere.com',
-        'www.MasterGoldy.pythonanywhere.com',
-        'mastergoldy.pythonanywhere.com',
-        '127.0.0.1',
-        'localhost'
-    ]
-else:
-    ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0']
+ALLOWED_HOSTS = [
+    'MasterGoldy.pythonanywhere.com',
+    'www.MasterGoldy.pythonanywhere.com',
+    'www.mastergoldy.pythonanywhere.com',
+    'mastergoldy.pythonanywhere.com',
+    '127.0.0.1',
+    'localhost'
+]
+
 
 # ==============================
 # НАСТРОЙКИ БЕЗОПАСНОСТИ ДЛЯ ПРОДАКШЕНА
