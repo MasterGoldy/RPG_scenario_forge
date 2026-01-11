@@ -243,47 +243,20 @@ LOGOUT_REDIRECT_URL = 'home'
 # ==============================
 # ЛОГИРОВАНИЕ
 # ==============================
-"""
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
-        },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
-    },
     'handlers': {
         'console': {
-            'level': 'INFO',
             'class': 'logging.StreamHandler',
-            'formatter': 'simple'
-        },
-        'file': {
-            'level': 'WARNING',
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'logs/django.log',
-            'formatter': 'verbose'
         },
     },
-    'loggers': {
-        'django': {
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
-            'propagate': True,
-        },
-        'django.request': {
-            'handlers': ['file'],
-            'level': 'ERROR',
-            'propagate': False,
-        },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
     },
 }
-"""
+
 # ==============================
 # НАСТРОЙКИ ДЛЯ РАЗРАБОТКИ
 # ==============================
@@ -298,11 +271,11 @@ if not PRODUCTION:
     CSRF_COOKIE_SECURE = False
 
     # Показываем SQL запросы в консоли
-    """
+
     LOGGING['loggers']['django.db.backends'] = {
         'level': 'DEBUG',
         'handlers': ['console'],
-    }"""
+    }
 
 # ==============================
 # ВНЕШНИЕ API
