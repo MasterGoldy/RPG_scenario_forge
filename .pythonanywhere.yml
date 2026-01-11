@@ -1,0 +1,16 @@
+# .pythonanywhere.yml
+version: 1.0
+user: MasterGoldy
+
+web_apps:
+  - domain: MasterGoldy.pythonanywhere.com
+    python_version: '3.12'
+    source_tree: '/home/MasterGoldy/RPG_scenario_forge'
+    virtualenv_path: '/home/MasterGoldy/RPG_scenario_forge/venv'
+
+tasks:
+  pre_restart:
+    - source venv/bin/activate
+    - pip install -r requirements.txt
+    - python manage.py migrate --noinput
+    - python manage.py collectstatic --noinput
